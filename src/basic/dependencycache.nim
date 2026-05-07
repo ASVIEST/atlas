@@ -6,7 +6,7 @@
 #    distribution, for details about the copyright.
 #
 
-import std / [os, strutils, paths, dirs]
+import std / [os, strutils, paths, dirs, sets]
 import context, deptypes, versions, gitops, pkgurls, reporters, deptypesjson
 
 type
@@ -98,6 +98,21 @@ proc findGitNimbleFiles*(pkg: Package; commit: CommitHash): seq[NimbleFileSource
       if source.path.splitPath().tail == Path(pkg.url.shortName() & ".nimble"):
         return @[source]
       result.add source
+
+proc prefetchGitNimbleFiles*(pkg: Package; remoteName: string; commits: openArray[CommitHash]) =
+  if not context().sparseCheckout:
+    return
+
+  var objects = initHashSet[string]()
+  for commit in commits:
+    if commit.isEmpty():
+      continue
+
+    for source in findGitNimbleFiles(pkg, commit):
+      objects.incl gitFileBlobId(pkg.ondisk, commit, source.path)
+
+  objects.excl "" # happens when we have error blobs, drop it
+  discard prefetchGitObjects(pkg.ondisk, remoteName, objects, Warning)
 
 proc materializeNimbleFile*(pkg: Package; commit: CommitHash; source: NimbleFileSource): Path =
   if not source.fromGit:

@@ -709,6 +709,30 @@ proc listFiles*(path: Path, commit: CommitHash): seq[string] =
   else:
     result = @[]
 
+proc gitFileBlobId*(path: Path, commit: CommitHash, file: Path): string =
+  let (outp, status) = exec(GitRevParse, path, [commit.h & ":" & $file], Debug)
+  if status == RES_OK:
+    result = outp.strip()
+  else:
+    result = ""
+
+proc prefetchGitObjects*(path: Path; remoteName: string; objectIds: HashSet[string]; errorReportLevel: MsgKind = Debug): bool =
+  if objectIds.len == 0:
+    return true
+
+  if remoteName.len == 0:
+    return false
+
+  var args: seq[string] = @["--no-tags", remoteName]
+  args.add objectIds.toSeq()
+
+  let (outp, status) = exec(GitFetch, path, args, errorReportLevel)
+  if status == RES_OK:
+    result = true
+  else:
+    message(errorReportLevel, path, "could not prefetch git objects: ", outp)
+    result = false
+
 proc listRemoteTags*(path: Path, url: string, errorReportLevel: MsgKind = Debug): (seq[VersionTag], bool) =
   var url = maybeUrlProxy(url.parseUri())
 

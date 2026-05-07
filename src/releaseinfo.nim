@@ -172,6 +172,8 @@ proc loadPackageReleaseInfo*(
       version = vtag
       debug pkg.url.projectName, "explicit version:", $version, "vtag:", repr vtag
 
+    prefetchGitNimbleFiles(pkg, repo.remoteName, result.expandedExplicitVersions.mapIt(it.commit)) # because addRelease call
+
     for version in result.expandedExplicitVersions:
       debug pkg.url.projectName, "check explicit version:", repr version
       if version.commit.isEmpty():
@@ -194,6 +196,7 @@ proc loadPackageReleaseInfo*(
 
       # Prefer tagged versions over versions inferred from Nimble-file history.
       let tags = collectTaggedVersions(repo)
+      prefetchGitNimbleFiles(pkg, repo.remoteName, tags.mapIt(it.commit))
       debug pkg.url.projectName, "nimble tags:", $tags
       for tag in tags:
         if not uniqueCommits.containsOrIncl(tag.c):
@@ -208,6 +211,7 @@ proc loadPackageReleaseInfo*(
           nimbleCommits.reverse()
 
         debug pkg.url.projectName, "nimble commits:", $nimbleCommits
+        prefetchGitNimbleFiles(pkg, repo.remoteName, nimbleCommits.mapIt(it.commit))
         for tag in nimbleCommits:
           if not uniqueCommits.containsOrIncl(tag.c):
             var vers: seq[(PackageVersion, NimbleRelease)]
