@@ -491,7 +491,7 @@ proc clone*(url: Uri, dest: Path; retries = 5): (CloneStatus, string) =
       let (_, sparseStatus) = exec(GitSparseCheckout, dest, ["set", "src"], Warning)
       if sparseStatus != RES_OK:
         return (OtherError, "could not set sparse checkout paths")
-      let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning)
+      let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning, streamOutput = true)
       if checkoutStatus != RES_OK:
         return (OtherError, "could not checkout sparse paths")
     return (Ok, "")
@@ -506,7 +506,7 @@ proc clone*(url: Uri, dest: Path; retries = 5): (CloneStatus, string) =
         let (_, sparseStatus) = exec(GitSparseCheckout, dest, ["set", "src"], Warning)
         if sparseStatus != RES_OK:
           return (OtherError, "could not set sparse checkout paths")
-        let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning)
+        let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning, streamOutput = true)
         if checkoutStatus != RES_OK:
           return (OtherError, "could not checkout sparse paths")
       return (Ok, "")
