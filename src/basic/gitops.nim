@@ -19,6 +19,7 @@ type
     GitRemoteRename = "git -C $DIR remote rename",
     GitDiff = "git -C $DIR diff",
     GitFetch = "git -C $DIR fetch",
+    GitFetchNoop = "git -C $DIR -c fetch.negotiationAlgorithm=noop fetch",
     GitFetchHeads = "git -C $DIR fetch",
     GitTag = "git -C $DIR tag",
     GitTags = "git -C $DIR show-ref --tags",
@@ -726,7 +727,7 @@ proc prefetchGitObjects*(path: Path; remoteName: string; objectIds: HashSet[stri
   var args: seq[string] = @["--no-tags", remoteName]
   args.add objectIds.toSeq()
 
-  let (outp, status) = exec(GitFetch, path, args, errorReportLevel)
+  let (outp, status) = exec(GitFetchNoop, path, args, errorReportLevel)
   if status == RES_OK:
     result = true
   else:
