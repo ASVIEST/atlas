@@ -477,7 +477,7 @@ proc clone*(url: Uri, dest: Path; retries = 5): (CloneStatus, string) =
     args.add extraArgs
   if sparseCheckout:
     args.add "--filter=blob:none"
-    args.add "--sparse"
+    args.add "--no-checkout"
   if remote.len > 0:
     args.add "--origin"
     args.add remote
@@ -491,6 +491,9 @@ proc clone*(url: Uri, dest: Path; retries = 5): (CloneStatus, string) =
       let (_, sparseStatus) = exec(GitSparseCheckout, dest, ["set", "src"], Warning)
       if sparseStatus != RES_OK:
         return (OtherError, "could not set sparse checkout paths")
+      let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning)
+      if checkoutStatus != RES_OK:
+        return (OtherError, "could not checkout sparse paths")
     return (Ok, "")
 
   const Pauses = [0, 1000, 2000, 3000, 4000, 6000]
@@ -503,6 +506,9 @@ proc clone*(url: Uri, dest: Path; retries = 5): (CloneStatus, string) =
         let (_, sparseStatus) = exec(GitSparseCheckout, dest, ["set", "src"], Warning)
         if sparseStatus != RES_OK:
           return (OtherError, "could not set sparse checkout paths")
+        let (_, checkoutStatus) = exec(GitCheckout, dest, [], Warning)
+        if checkoutStatus != RES_OK:
+          return (OtherError, "could not checkout sparse paths")
       return (Ok, "")
     elif "not found" in outp or "Not a git repo" in outp:
       return (NotFound, "not found")
